@@ -32,12 +32,13 @@ def draw_line_plot():
 def draw_bar_plot():
     # Copy and modify data for monthly bar plot
     
+    df_bar = df.copy()
     ordered_months = ['January', 'February', 'March', 'April', 'May', 'June',
                   'July', 'August', 'September', 'October', 'November', 'December']
     
-    df["year"] = df.index.year
-    df["month"] = df.index.month
-    df_bar = df.groupby(["year","month"]).mean().reset_index()
+    df_bar["year"] = df_bar.index.year
+    df_bar["month"] = df_bar.index.month
+    df_bar = df_bar.groupby(["year","month"]).mean().reset_index()
     df_bar["month"] = pd.to_datetime(df_bar["month"],format='%m').dt.month_name()
     df_bar["month"] = pd.Categorical(df_bar["month"], categories=ordered_months, ordered=True)
     df_bar = df_bar.pivot(index = "year", columns="month", values = "value")
@@ -55,22 +56,48 @@ def draw_bar_plot():
     fig.savefig('bar_plot.png')
     return fig
 
+
 def draw_box_plot():
     # Prepare data for box plots (this part is done!)
     df_box = df.copy()
     df_box.reset_index(inplace=True)
     df_box['year'] = [d.year for d in df_box.date]
+    ordered_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     df_box['month'] = [d.strftime('%b') for d in df_box.date]
-
+    df_box["month"] = pd.Categorical(df_box["month"], categories=ordered_months, ordered=True)    
+    print(df_box)
     # Draw box plots (using Seaborn)
+    flier_properties = dict(marker='d', 
+                        markersize=1)
 
 
+    fig, (ax1, ax2) = plt.subplots(ncols = 2, figsize = (15,5))
+    sns.boxplot(data = df_box, 
+                x=df_box["year"], 
+                y= df_box["value"], 
+                ax=ax1,
+                palette="tab10",
+                flierprops = flier_properties)
+    ax1.set_title("Year-wise Box Plot (Trend)")
+    ax1.set_xlabel("Year")
+    ax1.set_ylabel("Page Views")
 
 
-
+    sns.boxplot(data = df_box, 
+                x=df_box["month"], 
+                y= df_box["value"], 
+                ax=ax2, 
+                palette= "husl",
+                flierprops = flier_properties)
+    ax2.set_title("Month-wise Box Plot (Seasonality)")
+    ax2.set_xlabel("Month")
+    ax2.set_ylabel("Page Views")
+    
     # Save image and return fig (don't change this part)
     fig.savefig('box_plot.png')
     return fig
 
-#draw_line_plot()
+draw_line_plot()
 draw_bar_plot()
+draw_box_plot()
