@@ -3,6 +3,8 @@ import pandas as pd
 import seaborn as sns
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
+import warnings
+warnings.filterwarnings('ignore')
 
 # Import data (Make sure to parse dates. Consider setting index column to 'date'.)
 df = pd.read_csv("fcc-forum-pageviews.csv", index_col= ["date"], parse_dates=["date"])
@@ -29,13 +31,25 @@ def draw_line_plot():
 
 def draw_bar_plot():
     # Copy and modify data for monthly bar plot
-    df_bar = None
-
+    
+    ordered_months = ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+    
+    df["year"] = df.index.year
+    df["month"] = df.index.month
+    df_bar = df.groupby(["year","month"]).mean().reset_index()
+    df_bar["month"] = pd.to_datetime(df_bar["month"],format='%m').dt.month_name()
+    df_bar["month"] = pd.Categorical(df_bar["month"], categories=ordered_months, ordered=True)
+    df_bar = df_bar.pivot(index = "year", columns="month", values = "value")
+    print(df_bar)
+    
     # Draw bar plot
-
-
-
-
+    ax = df_bar.plot.bar(stacked=False, figsize=(8, 6), grid=False)
+    fig = ax.get_figure()
+    plt.ylabel('Average Page Views')
+    plt.xlabel('Years')
+    plt.tight_layout()
+    plt.legend(title="Month") 
 
     # Save image and return fig (don't change this part)
     fig.savefig('bar_plot.png')
@@ -58,4 +72,5 @@ def draw_box_plot():
     fig.savefig('box_plot.png')
     return fig
 
-draw_line_plot()
+#draw_line_plot()
+draw_bar_plot()
